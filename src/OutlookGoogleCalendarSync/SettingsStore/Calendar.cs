@@ -47,8 +47,12 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
             //Google
             UseGoogleCalendar = new GoogleCalendarListEntry();
             CloakEmail = true;
+            ColoursRestrictBy = RestrictBy.Exclude;
+            DeleteWhenColourExcluded = true;
+            Colours = new List<String>();
             ExcludeDeclinedInvites = true;
             ExcludeGoals = true;
+            AddGMeet = true;
 
             //Sync Options
             //How
@@ -93,6 +97,8 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
             ExcludePrivate = false;
             ExcludeAllDays = false;
             ExcludeFreeAllDays = false;
+            ExcludeSubject = false;
+            ExcludeSubjectText = "";
 
             ExtirpateOgcsMetadata = false;
             lastSyncDate = new DateTime(0);
@@ -127,8 +133,12 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
         #region Google
         [DataMember] public GoogleCalendarListEntry UseGoogleCalendar { get; set; }
         [DataMember] public Boolean CloakEmail { get; set; }
+        [DataMember] public RestrictBy ColoursRestrictBy { get; set; }
+        [DataMember] public Boolean DeleteWhenColourExcluded { get; set; }
+        [DataMember] public List<string> Colours { get; set; }
         [DataMember] public Boolean ExcludeDeclinedInvites { get; set; }
         [DataMember] public Boolean ExcludeGoals { get; set; }
+        [DataMember] public Boolean AddGMeet { get; set; }
         #endregion
         #region Sync Options
         /// <summary>For O->G match on signatures. Useful for Appled iCals where immutable Outlook IDs change every sync.</summary>
@@ -144,6 +154,7 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
         [DataMember] public bool SetEntriesPrivate { get; set; }
         [DataMember] public String PrivacyLevel { get; set; }
         [DataMember] public bool SetEntriesAvailable { get; set; }
+        /// <summary>Set availability status for all entries</summary>
         [DataMember] public String AvailabilityStatus { get; set; }
         [DataMember] public bool SetEntriesColour { get; set; }
         /// <summary>Set all Outlook appointments to this OlCategoryColor</summary>
@@ -190,6 +201,8 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
         [DataMember] public bool ExcludePrivate { get; set; }        
         [DataMember] public bool ExcludeAllDays { get; set; }
         [DataMember] public bool ExcludeFreeAllDays { get; set; }
+        [DataMember] public bool ExcludeSubject { get; set; }
+        [DataMember] public string ExcludeSubjectText { get; set; }
         #endregion
         #endregion
 
@@ -264,16 +277,20 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
             }
             log.Info("  Calendar: " + (UseOutlookCalendar.Name == "Calendar" ? "Default " : "") + UseOutlookCalendar.ToString());
             log.Info("  Category Filter: " + CategoriesRestrictBy.ToString());
-            log.Info("  Delete When Excluded:" + DeleteWhenCategoryExcluded);
+            log.Info("  Delete When Excluded: " + DeleteWhenCategoryExcluded);
             log.Info("  Categories: " + String.Join(",", Categories.ToArray()));
             log.Info("  Only Responded Invites: " + OnlyRespondedInvites);
             log.Info("  Filter String: " + OutlookDateFormat);
             log.Info("  GAL Blocked: " + OutlookGalBlocked);
 
             log.Info("GOOGLE SETTINGS:-");
-            log.Info("  Calendar: " + (UseGoogleCalendar == null ? "" : UseGoogleCalendar.ToString(true)));
+            log.Info("  Calendar: " + (UseGoogleCalendar?.Id == null ? "" : UseGoogleCalendar.ToString(true)));
+            log.Info("  Colour Filter: " + ColoursRestrictBy.ToString());
+            log.Info("  Delete When Excluded: " + DeleteWhenColourExcluded);
+            log.Info("  Colours: " + String.Join(",", Colours.ToArray()));
             log.Info("  Exclude Declined Invites: " + ExcludeDeclinedInvites);
             log.Info("  Exclude Goals: " + ExcludeGoals);
+            log.Info("  Include Google Meet: " + AddGMeet);
             log.Info("  Cloak Email: " + CloakEmail);
 
             log.Info("SYNC OPTIONS:-");
@@ -304,7 +321,7 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
                 if (Obfuscation.FindReplace.Count == 0) log.Info("    No regex defined.");
                 else {
                     foreach (FindReplace findReplace in Obfuscation.FindReplace) {
-                        log.Info("    '" + findReplace.find + "' -> '" + findReplace.replace + "'");
+                        log.Info("    " + findReplace.target + ": '" + findReplace.find + "' -> '" + findReplace.replace + "'");
                     }
                 }
             }
@@ -327,6 +344,7 @@ namespace OutlookGoogleCalendarSync.SettingsStore {
             log.Info("  ExcludeTentative: " + ExcludeTentative);
             log.Info("  ExcludePrivate: " + ExcludePrivate);
             log.Info("  ExcludeAllDay: " + ExcludeAllDays + "; that are marked Free: " + ExcludeFreeAllDays);
+            log.Info("  ExcludeSubject: " + ExcludeSubject + (ExcludeSubject ? "; Regex: " + ExcludeSubjectText : ""));
         }
 
         public static SettingsStore.Calendar GetCalendarProfile(Object settingsStore) {

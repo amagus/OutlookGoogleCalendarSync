@@ -180,7 +180,7 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             get {
                 SettingsStore.Calendar profile = Settings.Profile.InPlay();
                 List<Palette> activePalette = new List<Palette>();
-                if (profile.UseGoogleCalendar == null) return activePalette;
+                if (profile.UseGoogleCalendar?.Id == null) return activePalette;
 
                 if (profile.UseGoogleCalendar.ColourId == "0") {
                     GoogleOgcs.Calendar.Instance.GetCalendars();
@@ -232,6 +232,26 @@ namespace OutlookGoogleCalendarSync.GoogleOgcs {
             foreach (KeyValuePair<String, ColorDefinition> colour in colours.Calendar) {
                 calendarPalette.Add(new Palette(Palette.Type.Calendar, colour.Key, colour.Value.Background, OutlookOgcs.Categories.Map.RgbColour(colour.Value.Background)));
             }
+            Forms.Main.Instance.miColourBuildPicker_Click(null, null);
+        }
+        
+        /// <summary>
+        /// Build colour list from those downloaded from Google.
+        /// </summary>
+        /// <param name="clb">The checklistbox to populate with the colours.</param>
+        public void BuildPicker(System.Windows.Forms.CheckedListBox clb) {
+            clb.BeginUpdate();
+            clb.Items.Clear();
+            clb.Items.Add("<Default calendar colour>");
+            foreach (Palette colour in GoogleOgcs.Calendar.Instance.ColourPalette.eventPalette) {
+                clb.Items.Add(colour.Name);
+            }
+            foreach (String colour in Forms.Main.Instance.ActiveCalendarProfile.Colours) {
+                try {
+                    clb.SetItemChecked(clb.Items.IndexOf(colour), true);
+                } catch { /* Colour "colour" no longer exists */ }
+            }
+            clb.EndUpdate();
         }
 
         /// <summary>

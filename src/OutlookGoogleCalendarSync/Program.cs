@@ -503,7 +503,7 @@ namespace OutlookGoogleCalendarSync {
                 Settings.Instance.Version = Application.ProductVersion;
                 if (isHotFix) {
                     if (!(Settings.Instance.CloudLogging ?? false) | Settings.Instance.TelemetryDisabled) {
-                        String disabledSetting = (!(Settings.Instance.CloudLogging ?? false) ? "cloud logging" : "");
+                        String disabledSetting = (!(Settings.Instance.CloudLogging ?? false) ? "automatic feedback of errors" : "");
                         if (Settings.Instance.TelemetryDisabled) {
                             if (!String.IsNullOrEmpty(disabledSetting)) disabledSetting += " and ";
                             disabledSetting += "telemetry";
@@ -515,7 +515,12 @@ namespace OutlookGoogleCalendarSync {
                         }
                     }
                 } else { //Release notes not updated for hotfixes.
-                    Helper.OpenBrowser(OgcsWebsite + "/release-notes.html");
+                    String releaseNotesUrl = "/release-notes.html";
+                    if (!String.IsNullOrEmpty(Settings.Instance.GaccountEmail)) {
+                        byte[] plainTextBytes = System.Text.Encoding.UTF8.GetBytes(Settings.Instance.GaccountEmail);
+                        releaseNotesUrl += "?id=" + System.Convert.ToBase64String(plainTextBytes);
+                    }
+                    Helper.OpenBrowser(OgcsWebsite + releaseNotesUrl);
                     if (isSquirrelInstall) {
                         Telemetry.Send(Analytics.Category.squirrel, Analytics.Action.upgrade, "from=" + settingsVersion + ";to=" + Application.ProductVersion);
                         Telemetry.GA4Event.Event squirrelGaEv = new(Telemetry.GA4Event.Event.Name.squirrel);
@@ -659,17 +664,21 @@ namespace OutlookGoogleCalendarSync {
         private static void instancesRunning() {
             try {
                 System.Diagnostics.Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
-                String currentCmdLine = getProcessCommandLine(currentProcess.Id);
-
                 System.Diagnostics.Process[] processes = System.Diagnostics.Process.GetProcessesByName(currentProcess.ProcessName);
                 
                 if (processes.Count() > 1) {
                     log.Warn("There are " + processes.Count() + " " + currentProcess.ProcessName + " processes currently running.");
                     List<System.Linq.IGrouping<string, System.Diagnostics.Process>> sameExe = processes.GroupBy(p => p.MainModule.FileName).Where(e => e.Count() > 1).ToList();
                     log.Debug(sameExe.Count() + " executables have more than one process attached; checking runtime arguments");
+                    log.Debug("Current process command line:-");
+                    String currentCmdLine = getProcessCommandLine(currentProcess.Id);
+
                     foreach (System.Linq.IGrouping<string, System.Diagnostics.Process> exe in sameExe) {
+                        log.Debug("Checking other processes running the same executable:-");
                         log.Debug(exe.Key);
                         foreach (System.Diagnostics.Process process in exe) {
+                            if (process.Id == currentProcess.Id) continue;
+
                             String cmdLine = getProcessCommandLine(process.Id);
                             if (cmdLine == currentCmdLine) {
                                 OgcsMessageBox.Show("You already have an instance of OGCS running using the same configuration.\r\n" +
@@ -678,6 +687,7 @@ namespace OutlookGoogleCalendarSync {
                                 return;
                             }
                         }
+                        log.Debug("OK - they are running with different configurations.");
                     }
                 }
 

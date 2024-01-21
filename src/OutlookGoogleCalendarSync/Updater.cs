@@ -211,7 +211,7 @@ namespace OutlookGoogleCalendarSync {
                                         //File does not exist: C:\Users\Paul\AppData\Local\OutlookGoogleCalendarSync\packages\OutlookGoogleCalendarSync-2.8.4-alpha-full.nupkg
                                         //Extract the nupkg filename
                                         String regexMatch = ".*" + updates.PackageDirectory.Replace(@"\", @"\\") + @"\\(.*?([\d\.]+-\w+).*)$";
-                                        System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(ex.InnerException.Message, regexMatch);
+                                        Match match = Regex.Match(ex.InnerException.Message, regexMatch);
 
                                         if (match?.Groups?.Count == 3) {
                                             log.Warn("Could not update due to missing file " + match.Groups[1]);
@@ -253,7 +253,9 @@ namespace OutlookGoogleCalendarSync {
                 } else {
                     log.Info("Already running the latest version of OGCS.");
                     if (this.isManualCheck) { //Was a manual check, so give feedback
-                        OgcsMessageBox.Show("You are already running the latest version of OGCS.", "Latest Version", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        String beta = "";
+                        if (!Settings.Instance.AlphaReleases && Application.ProductVersion.EndsWith(".0.0")) beta = "beta ";
+                        OgcsMessageBox.Show($"You are already running the latest {beta}version of OGCS.", "Latest Version", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
 
@@ -442,7 +444,7 @@ namespace OutlookGoogleCalendarSync {
             string html = "";
             String errorDetails = "";
             try {
-                html = new Extensions.OgcsWebClient().DownloadString("https://github.com/phw198/OutlookGoogleCalendarSync/blob/master/docs/latest_zip_release.md");
+                html = new Extensions.OgcsWebClient().DownloadString("https://raw.githubusercontent.com/phw198/OutlookGoogleCalendarSync/master/docs/latest_zip_release.md");
             } catch (System.Net.WebException ex) {
                 if (OGCSexception.GetErrorCode(ex) == "0x80131509")
                     log.Warn("Failed to retrieve data (no network?): " + ex.Message);
@@ -454,19 +456,19 @@ namespace OutlookGoogleCalendarSync {
 
             if (!string.IsNullOrEmpty(html)) {
                 log.Debug("Finding Beta release...");
-                MatchCollection release = getRelease(html, @"<strong>Beta</strong>: <a href=""(.*?)"">v([\d\.]+)</a>");
+                MatchCollection release = getRelease(html, @"\*\*Beta\*\*: \[v([\d\.]+)\]\((.*?)\)");
                 if (release.Count > 0) {
                     releaseType = "Beta";
-                    releaseURL = release[0].Result("$1");
-                    releaseVersion = release[0].Result("$2");
+                    releaseURL = release[0].Result("$2");
+                    releaseVersion = release[0].Result("$1");
                 }
                 if (Settings.Instance.AlphaReleases) {
                     log.Debug("Finding Alpha release...");
-                    release = getRelease(html, @"<strong>Alpha</strong>: <a href=""(.*?)"">v([\d\.]+)</a>");
+                    release = getRelease(html, @"\*\*Alpha\*\*: \[v([\d\.]+)\]\((.*?)\)");
                     if (release.Count > 0) {
                         releaseType = "Alpha";
-                        releaseURL = release[0].Result("$1");
-                        releaseVersion = release[0].Result("$2");
+                        releaseURL = release[0].Result("$2");
+                        releaseVersion = release[0].Result("$1");
                     }
                 }
             }
@@ -482,7 +484,11 @@ namespace OutlookGoogleCalendarSync {
                     }
                 } else {
                     log.Info("Already on latest ZIP release.");
-                    if (isManualCheck) OgcsMessageBox.Show("You are already on the latest release", "No Update Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (isManualCheck) {
+                        String beta = "";
+                        if (!Settings.Instance.AlphaReleases && Application.ProductVersion.EndsWith(".0.0")) beta = "beta ";
+                        OgcsMessageBox.Show($"You are already on the latest {beta}release", "No Update Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
             } else {
                 log.Info("Did not find ZIP release.");
