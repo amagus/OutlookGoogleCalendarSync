@@ -40,6 +40,8 @@ namespace OutlookGoogleCalendarSync.Forms {
             gbAppBehaviour_Proxy.MinimumSize =
             gbAppBehaviour_Logging.MinimumSize = new System.Drawing.Size(0, 0);
 
+            Program.Updater.CheckForUpdate(btCheckForUpdate);
+
             if (startingTab != null && startingTab == "Help") this.tabApp.SelectedTab = this.tabPage_Help;
 
             Instance = this;
@@ -1026,8 +1028,8 @@ namespace OutlookGoogleCalendarSync.Forms {
                 log.Info("Minimising application to task tray.");
                 this.ShowInTaskbar = false;
                 this.Hide();
-                if (Settings.Instance.ShowBubbleWhenMinimising) {
-                    NotificationTray.ShowBubbleInfo("OGCS is still running.\r\nClick here to disable this notification.", ToolTipIcon.Info, "ShowBubbleWhenMinimising");
+                if (Settings.Instance.ShowSystemNotificationWhenMinimising) {
+                    NotificationTray.ShowBubbleInfo("OGCS is still running.\r\nClick here to disable this notification.", ToolTipIcon.Info, "ShowSystemNotificationWhenMinimising");
                 } else {
                     trayIcon.Tag = "";
                 }
@@ -2535,7 +2537,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
         private void cbAlphaReleases_CheckedChanged(object sender, EventArgs e) {
             if (this.Visible)
-                Settings.Instance.AlphaReleases = cbAlphaReleases.Checked;
+            Settings.Instance.AlphaReleases = cbAlphaReleases.Checked;
         }
         #endregion
         #endregion
