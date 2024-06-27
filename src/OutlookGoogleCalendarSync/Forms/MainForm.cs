@@ -40,7 +40,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             gbAppBehaviour_Proxy.MinimumSize =
             gbAppBehaviour_Logging.MinimumSize = new System.Drawing.Size(0, 0);
 
-            Program.Updater.CheckForUpdate(btCheckForUpdate);
+            Program.Updater.CheckForUpdate();
 
             if (startingTab != null && startingTab == "Help") this.tabApp.SelectedTab = this.tabPage_Help;
 
@@ -489,14 +489,10 @@ namespace OutlookGoogleCalendarSync.Forms {
                     cbConfirmOnDelete.Checked = profile.ConfirmOnDelete;
                     cbOfuscate.Checked = profile.Obfuscation.Enabled;
                     howObfuscatePanel.Visible = false;
-                    if (profile.SyncDirection.Id == Sync.Direction.Bidirectional.Id) {
-                        tbCreatedItemsOnly.SelectedIndex = profile.CreatedItemsOnly ? 1 : 0;
-                        if (profile.TargetCalendar.Id == Sync.Direction.OutlookToGoogle.Id) tbTargetCalendar.SelectedIndex = 0;
-                        if (profile.TargetCalendar.Id == Sync.Direction.GoogleToOutlook.Id) tbTargetCalendar.SelectedIndex = 1;
-                    } else {
-                        tbCreatedItemsOnly.SelectedIndex = 0;
-                        tbTargetCalendar.SelectedIndex = 2;
-                    }
+
+                    tbCreatedItemsOnly.SelectedIndex = profile.CreatedItemsOnly ? 1 : 0;
+                    if (profile.TargetCalendar.Id == Sync.Direction.OutlookToGoogle.Id) tbTargetCalendar.SelectedIndex = 0;
+                    if (profile.TargetCalendar.Id == Sync.Direction.GoogleToOutlook.Id) tbTargetCalendar.SelectedIndex = 1;
                     tbCreatedItemsOnly_SelectedItemChanged(null, null);
                     tbTargetCalendar_SelectedItemChanged(null, null);
 
@@ -1011,11 +1007,12 @@ namespace OutlookGoogleCalendarSync.Forms {
             if (this.WindowState == FormWindowState.Minimized || !this.Visible || !this.TopMost || !this.ShowInTaskbar) {
                 this.tbSyncNote.ScrollBars = RichTextBoxScrollBars.None; //Reset scrollbar
                 this.Show(); //Show minimised back in taskbar
-                this.ShowInTaskbar = true;
                 this.WindowState = FormWindowState.Normal;
+                this.ShowInTaskbar = true;
                 if (forceToTop) this.TopMost = true;
                 this.tbSyncNote.ScrollBars = RichTextBoxScrollBars.Vertical; //Show scrollbar if necessary
                 this.Show(); //Now restore
+                if (this.Location.X < 0 || this.Location.Y < 0) this.CenterToScreen();
                 this.TopMost = false;
                 this.Refresh();
                 System.Windows.Forms.Application.DoEvents();
@@ -1765,11 +1762,6 @@ namespace OutlookGoogleCalendarSync.Forms {
                 cbObfuscateDirection.Enabled = true;
                 cbObfuscateDirection.SelectedIndex = Sync.Direction.OutlookToGoogle.Id - 1;
 
-                tbCreatedItemsOnly.Enabled = true;
-
-                if (tbTargetCalendar.Items.Contains("target calendar"))
-                    tbTargetCalendar.Items.Remove("target calendar");
-                tbTargetCalendar.SelectedIndex = 0;
                 tbTargetCalendar.Enabled = true;
                 cbOutlookPush.Enabled = true;
                 cbReminderDND.Visible = true;
@@ -1784,13 +1776,10 @@ namespace OutlookGoogleCalendarSync.Forms {
                 cbObfuscateDirection.Enabled = false;
                 cbObfuscateDirection.SelectedIndex = ActiveCalendarProfile.SyncDirection.Id - 1;
 
-                tbCreatedItemsOnly.Enabled = false;
-                tbCreatedItemsOnly.SelectedIndex = 0;
-
-                if (!tbTargetCalendar.Items.Contains("target calendar"))
-                    tbTargetCalendar.Items.Add("target calendar");
-                if (tbTargetCalendar.SelectedIndex == 2) tbTargetCalendar_SelectedItemChanged(null, null);
-                tbTargetCalendar.SelectedIndex = 2;
+                if (ActiveCalendarProfile.SyncDirection.Id == Sync.Direction.OutlookToGoogle.Id)
+                    tbTargetCalendar.SelectedIndex = 0;
+                else if (ActiveCalendarProfile.SyncDirection.Id == Sync.Direction.GoogleToOutlook.Id)
+                    tbTargetCalendar.SelectedIndex = 1;
                 tbTargetCalendar.Enabled = false;
                 lExcludeItems.Text = "Exclude items. Affects those previously synced:-";
                 lWhatExcludeInfo.Left = 228;
@@ -1906,14 +1895,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                             this.cbColour.Checked = false;
                         break;
                     }
-                case "target calendar": {
-                        ActiveCalendarProfile.TargetCalendar = ActiveCalendarProfile.SyncDirection;
-                        if (Outlook.Factory.OutlookVersionName == Outlook.Factory.OutlookVersionNames.Outlook2003
-                            && ActiveCalendarProfile.SyncDirection.Id == Sync.Direction.GoogleToOutlook.Id)
-                            this.cbColour.Checked = false;
-                        break;
                     }
-            }
             buildAvailabilityDropdown();
         }
 
