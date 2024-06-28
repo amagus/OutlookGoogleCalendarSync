@@ -1621,7 +1621,6 @@ namespace OutlookGoogleCalendarSync.Forms {
                 else {
                     Settings.Instance.AssignedClientIdentifier = "";
                     Settings.Instance.GaccountEmail = "";
-                    tbConnectedAcc.Text = "Not connected";
                     System.IO.File.Delete(System.IO.Path.Combine(Program.UserFilePath, Ogcs.Google.Authenticator.TokenFile));
                 }
             }
@@ -1901,8 +1900,8 @@ namespace OutlookGoogleCalendarSync.Forms {
 
         private void cbPrivate_CheckedChanged(object sender, EventArgs e) {
             ddPrivacy.Enabled = cbPrivate.Checked;
-            if (this.LoadingProfileConfig) return;
-
+            if (this.LoadingProfileConfig) return; 
+            
             ActiveCalendarProfile.SetEntriesPrivate = cbPrivate.Checked;
         }
         private void ddPrivacy_SelectedIndexChanged(object sender, EventArgs e) {
@@ -1913,8 +1912,8 @@ namespace OutlookGoogleCalendarSync.Forms {
 
         private void cbAvailable_CheckedChanged(object sender, EventArgs e) {
             ddAvailabilty.Enabled = cbAvailable.Checked;
-            if (this.LoadingProfileConfig) return;
-
+            if (this.LoadingProfileConfig) return; 
+            
             ActiveCalendarProfile.SetEntriesAvailable = cbAvailable.Checked;
         }
         private void ddAvailabilty_SelectedIndexChanged(object sender, EventArgs e) {
@@ -1955,7 +1954,7 @@ namespace OutlookGoogleCalendarSync.Forms {
                     log.Warn("Could not find the Google colour for: " + palette.ToString());
                 else
                     ddGoogleColour_SelectedIndexChanged(null, null);
-
+                
             } catch (System.Exception ex) {
                 ex.Analyse("ddOutlookColour_SelectedIndexChanged(): Could not update ddGoogleColour.");
             } finally {
@@ -1977,19 +1976,19 @@ namespace OutlookGoogleCalendarSync.Forms {
                     oCatName = ActiveCalendarProfile.SetEntriesColourName;
                 else
                     oCatName = Outlook.Calendar.Instance.GetCategoryColour(ddGoogleColour.SelectedItem.Id);
-
+                
                 foreach (Outlook.Categories.ColourInfo cInfo in ddOutlookColour.Items) {
                     if (cInfo.Text == oCatName) {
                         ddOutlookColour.SelectedItem = cInfo;
                         break;
                     }
                 }
-
+                
                 if (ddOutlookColour.SelectedIndex == -1)
                     log.Warn("Could not find the Outlook category for '" + oCatName + "'");
                 else
                     ddOutlookColour_SelectedIndexChanged(null, null);
-
+                
             } catch (System.Exception ex) {
                 ex.Analyse("ddGoogleColour_SelectedIndexChanged(): Could not update ddOutlookColour.");
             } finally {
@@ -2072,7 +2071,7 @@ namespace OutlookGoogleCalendarSync.Forms {
             String tooltip = "Set to zero to disable automated syncs";
             if (!Settings.Instance.UsingPersonalAPIkeys()) {
                 String fup = "Fair usage policy: Minimum sync interval of " + MinSyncMinutes + "mins" + (ActiveCalendarProfile.OutlookPush ? " with Push Sync enabled" : "") + ".";
-
+                
                 tbInterval.ValueChanged -= new System.EventHandler(this.tbMinuteOffsets_ValueChanged);
                 cbIntervalUnit.SelectedIndexChanged -= new System.EventHandler(this.cbIntervalUnit_SelectedIndexChanged);
                 try {
@@ -2519,7 +2518,7 @@ namespace OutlookGoogleCalendarSync.Forms {
         }
         private void cbAlphaReleases_CheckedChanged(object sender, EventArgs e) {
             if (this.Visible)
-            Settings.Instance.AlphaReleases = cbAlphaReleases.Checked;
+                Settings.Instance.AlphaReleases = cbAlphaReleases.Checked;
         }
         #endregion
         #endregion
